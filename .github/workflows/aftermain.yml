@@ -3,7 +3,7 @@ name: After wf
 on:
   workflow_run:
     workflows:
-      - Main wf
+      - "Main wf"
     types:
       - completed
 
