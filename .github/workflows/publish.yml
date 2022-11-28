@@ -79,3 +79,14 @@ jobs:
           which kubectl
           kubectl cluster-info
           kubectl get storageclass standard
+
+      - name: Test Crossplane MongoDB Package
+        if: inputs.package == 'mongodb'
+        run: |
+          echo ./crossplane-e2e-mongodb.sh
+          exit 1
+
+      - name: Cleanup MongoDB Package
+        if: always()
+        run: |
+          echo ./mongodb/crossplane-e2e-cleanup.sh
