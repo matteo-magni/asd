@@ -87,6 +87,6 @@ jobs:
           exit 1
 
       - name: Cleanup MongoDB Package
-        if: always()
+        if: always() && inputs.package == 'mongodb'
         run: |
           echo ./mongodb/crossplane-e2e-cleanup.sh
