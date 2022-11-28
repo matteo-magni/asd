@@ -16,6 +16,12 @@ on:
       run-test:
         type: boolean
         default: false
+      kubernetes-version:
+        type: string
+        default: v1.24.6
+      kind-version:
+        type: string
+        default: v0.16.0
     outputs:
       package_repository:
         value: ${{ jobs.publish.outputs.package_repository }}
@@ -58,3 +64,18 @@ jobs:
       - name: Dump info
         run: |
           env | sort
+
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.4.0
+        with:
+          verbosity: 5
+          version: ${{ inputs.kind-version }}
+          kubectl_version: ${{ inputs.kubernetes-version }}
+          node_image: kindest/node:${{ inputs.kubernetes-version }}
+
+      - name: Verify Cluster
+        run: |
+          kubectl version
+          which kubectl
+          kubectl cluster-info
+          kubectl get storageclass standard
