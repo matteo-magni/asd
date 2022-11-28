@@ -1,0 +1,43 @@
+name: Use ENV in runner
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'aws/crossplane/*/**'
+      - 'azure/crossplane/*/**'
+      - 'gcp/crossplane/*/**'
+      - 'multicloud/crossplane/*/**'
+
+jobs:
+
+  one:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
+
+    steps:
+
+    - name: Clone Repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: '0'
+
+    - name: List changed files in PR
+      id: list
+      shell: bash
+      run: |
+        packages=$(git diff-tree --name-only -r --diff-filter=ACM HEAD~1 HEAD | grep -E '^[^/]+/crossplane/' | cut -d/ -f-3 | jq -ncrR '[inputs]|unique|map(split("/")|{"provider":.[0],"name":.[2]})|{"include":.}')
+        echo "packages=$packages" >> $GITHUB_OUTPUT
+
+  publish:
+    needs:
+      - one
+    uses: ./.github/workflows/publish.yml
+    strategy:
+      matrix: ${{ fromJson(needs.one.outputs.packages) }}
+    with:
+      package: ${{ matrix.name }}
+      provider: ${{ matrix.provider }}
+      version: 0.0.1
+      run-test: true
