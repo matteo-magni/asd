@@ -8,9 +8,6 @@ on:
 
 jobs:
 
-  bump-version:
-    uses: ./.github/workflows/bump-version.yml
-
   list-packages:
     uses: ./.github/workflows/list-packages.yml
     with:
@@ -37,6 +34,12 @@ jobs:
           echo "carvel_publish=$(jq '.include|length > 0' <<<${carvel})" >> $GITHUB_OUTPUT
         env:
           PACKAGES: ${{ needs.list-packages.outputs.packages }}
+
+  bump-version:
+    if: needs.filter-packages.outputs.crossplane_publish == 'true' || needs.filter-packages.outputs.carvel_publish == 'true'
+    uses: ./.github/workflows/bump-version.yml
+    needs:
+      - filter-packages
 
   crossplane-publish:
     if: needs.filter-packages.outputs.crossplane_publish == 'true'
