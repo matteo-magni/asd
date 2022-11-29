@@ -1,4 +1,4 @@
-name: Reusable workflow for publishing Crossplane packages
+name: Reusable workflow for publishing Carvel packages
 
 on:
   workflow_call:
@@ -39,7 +39,7 @@ jobs:
     env:
       PACKAGE_VERSION: ${{ inputs.package_version }}
       PACKAGE_REGISTRY: ghcr.io
-      PACKAGE_REPOSITORY: ${{ github.repository }}/${{ inputs.package_provider }}/crossplane/${{ inputs.package_name }}
+      PACKAGE_REPOSITORY: ${{ github.repository }}/${{ inputs.package_provider }}/carvel/${{ inputs.package_name }}
       PACKAGE_PROVIDER: ${{ inputs.package_provider }}
       PACKAGE_NAME: ${{ inputs.package_name }}
 
@@ -51,7 +51,7 @@ jobs:
 
   test:
     if: inputs.run-test
-    uses: ./.github/workflows/crossplane-test.yml
+    uses: ./.github/workflows/carvel-test.yml
     needs:
       - publish
     with:
