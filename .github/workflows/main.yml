@@ -1,5 +1,9 @@
 name: Publish packages
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:
@@ -13,42 +17,20 @@ jobs:
     with:
       basedir: packages
 
-  filter-packages:
-    runs-on: ubuntu-latest
-    needs:
-      - list-packages
-    outputs:
-      crossplane: ${{ steps.filter.outputs.crossplane }}
-      carvel: ${{ steps.filter.outputs.carvel }}
-      crossplane_publish: ${{ steps.filter.outputs.crossplane_publish }}
-      carvel_publish: ${{ steps.filter.outputs.carvel_publish }}
-    steps:
-      - name: Filter packages
-        id: filter
-        run: |
-          crossplane=$(jq -c '.include|=map(select(.operator=="crossplane"))' <<< $PACKAGES)
-          echo "crossplane=${crossplane}" | tee -a $GITHUB_OUTPUT
-          echo "crossplane_publish=$(jq '.include|length > 0' <<<${crossplane})" >> $GITHUB_OUTPUT
-          carvel=$(jq -c '.include|=map(select(.operator!="crossplane"))' <<< $PACKAGES)
-          echo "carvel=${carvel}" | tee -a $GITHUB_OUTPUT
-          echo "carvel_publish=$(jq '.include|length > 0' <<<${carvel})" >> $GITHUB_OUTPUT
-        env:
-          PACKAGES: ${{ needs.list-packages.outputs.packages }}
-
   bump-version:
-    if: needs.filter-packages.outputs.crossplane_publish == 'true' || needs.filter-packages.outputs.carvel_publish == 'true'
+    if: needs.list-packages.outputs.crossplane_publish == 'true' || needs.list-packages.outputs.carvel_publish == 'true'
     uses: ./.github/workflows/bump-version.yml
     needs:
-      - filter-packages
+      - list-packages
 
   crossplane-publish:
-    if: needs.filter-packages.outputs.crossplane_publish == 'true'
+    if: needs.list-packages.outputs.crossplane_publish == 'true'
     needs:
       - bump-version
-      - filter-packages
+      - list-packages
     uses: ./.github/workflows/crossplane-publish.yml
     strategy:
-      matrix: ${{ fromJson(needs.filter-packages.outputs.crossplane) }}
+      matrix: ${{ fromJson(needs.list-packages.outputs.crossplane) }}
     with:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
@@ -56,13 +38,13 @@ jobs:
       run-test: false
 
   carvel-publish:
-    if: needs.filter-packages.outputs.carvel_publish == 'true'
+    if: needs.list-packages.outputs.carvel_publish == 'true'
     needs:
       - bump-version
-      - filter-packages
+      - list-packages
     uses: ./.github/workflows/carvel-publish.yml
     strategy:
-      matrix: ${{ fromJson(needs.filter-packages.outputs.carvel) }}
+      matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
     with:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
