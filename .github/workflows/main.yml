@@ -23,16 +23,23 @@ jobs:
     outputs:
       crossplane: ${{ steps.filter.outputs.crossplane }}
       carvel: ${{ steps.filter.outputs.carvel }}
+      crossplane_publish: ${{ steps.filter.outputs.crossplane_publish }}
+      carvel_publish: ${{ steps.filter.outputs.carvel_publish }}
     steps:
       - name: Filter packages
         id: filter
         run: |
-          echo crossplane=$(jq -c '.include|=map(select(.operator=="crossplane"))' <<< $PACKAGES) >> $GITHUB_OUTPUT
-          echo carvel=$(jq -c '.include|=map(select(.operator!="crossplane"))' <<< $PACKAGES) >> $GITHUB_OUTPUT
+          crossplane=$(jq -c '.include|=map(select(.operator=="crossplane"))' <<< $PACKAGES)
+          echo "crossplane=${crossplane}" | tee $GITHUB_OUTPUT
+          echo "crossplane_publish=$(jq '.include|length > 0' <<<${crossplane})" >> $GITHUB_OUTPUT
+          carvel=$(jq -c '.include|=map(select(.operator!="crossplane"))' <<< $PACKAGES)
+          echo "carvel=${carvel}" | tee $GITHUB_OUTPUT
+          echo "carvel_publish=$(jq '.include|length > 0' <<<${carvel})" >> $GITHUB_OUTPUT
         env:
           PACKAGES: ${{ needs.list-packages.outputs.packages }}
 
   crossplane-publish:
+    if: needs.filter-packages.outputs.crossplane_publish == 'true'
     needs:
       - bump-version
       - filter-packages
@@ -46,6 +53,7 @@ jobs:
       run-test: false
 
   carvel-publish:
+    if: needs.filter-packages.outputs.carvel_publish == 'true'
     needs:
       - bump-version
       - filter-packages
