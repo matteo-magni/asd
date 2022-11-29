@@ -1,4 +1,4 @@
-name: Reusable test workflow
+name: Reusable workflow for testing Crossplane packages
 
 
 on:
@@ -11,6 +11,12 @@ on:
         type: string
         required: true
       package_provider:
+        type: string
+        required: true
+      package_registry:
+        type: string
+        required: true
+      package_repository:
         type: string
         required: true
       kubernetes-version:
@@ -49,19 +55,19 @@ jobs:
           kubectl cluster-info
           kubectl get storageclass standard
 
-      - name: Create Azure Config Secret
-        if: inputs.provider == 'azure'
-        run: |
-          kubectl create namespace upbound-system
-          kubectl create secret generic azure-secret -n upbound-system --from-literal=creds='${{ secrets.AZURE_CONFIG }}'
+      # - name: Create Azure Config Secret
+      #   if: inputs.package_provider == 'azure'
+      #   run: |
+      #     kubectl create namespace ${CROSSPLANE_NAMESPACE}
+      #     kubectl create secret generic azure-secret -n ${CROSSPLANE_NAMESPACE} --from-literal=creds='${{ secrets.AZURE_CONFIG }}'
 
-      - name: Test Crossplane Package
+      - name: Test Crossplane package
         run: |
           [ -x ${{ env.SCRIPT }} ] && ${{ env.SCRIPT }} || true
         env:
           SCRIPT: ./scripts/crossplane-e2e-${{ inputs.package_name }}.sh
 
-      - name: Cleanup Package
+      - name: Cleanup Crossplane package
         run: |
           [ -x ${{ env.SCRIPT }} ] && ${{ env.SCRIPT }} || true
         env:

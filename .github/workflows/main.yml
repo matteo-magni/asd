@@ -5,34 +5,8 @@ on:
   push:
     paths:
       - 'packages/**'
-      # - 'aws/crossplane/*/**'
-      # - 'azure/crossplane/*/**'
-      # - 'gcp/crossplane/*/**'
-      # - 'multicloud/crossplane/*/**'
 
 jobs:
-
-  # one:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     packages: ${{ steps.list.outputs.packages }}
-
-  #   steps:
-
-    # - name: Clone Repo
-    #   uses: actions/checkout@v3
-    #   with:
-    #     fetch-depth: '0'
-
-    # - name: List changed files in PR
-    #   id: list
-    #   shell: bash
-    #   run: |
-    #     packages=$(git diff-tree --name-only -r --diff-filter=ACM HEAD~1 HEAD | grep -E '^[^/]+/crossplane/' | cut -d/ -f-3 | jq -ncrR '[inputs]|unique|map(split("/")|{"provider":.[0],"name":.[2]})|{"include":.}')
-    #     echo "packages=$packages" >> $GITHUB_OUTPUT
-
-  bump-version:
-    uses: ./.github/workflows/bump-version.yml
 
   list-packages:
     uses: ./.github/workflows/list-packages.yml
@@ -55,6 +29,9 @@ jobs:
         env:
           PACKAGES: ${{ needs.list-packages.outputs.packages }}
 
+  bump-version:
+    uses: ./.github/workflows/bump-version.yml
+
   crossplane-publish:
     needs:
       - bump-version
@@ -62,6 +39,19 @@ jobs:
     uses: ./.github/workflows/crossplane-publish.yml
     strategy:
       matrix: ${{ fromJson(needs.filter-packages.outputs.crossplane) }}
+    with:
+      package_name: ${{ matrix.name }}
+      package_provider: ${{ matrix.provider }}
+      package_version: ${{ needs.bump-version.outputs.version }}
+      run-test: true
+
+  carvel-publish:
+    needs:
+      - bump-version
+      - filter-packages
+    uses: ./.github/workflows/carvel-publish.yml
+    strategy:
+      matrix: ${{ fromJson(needs.filter-packages.outputs.carvel) }}
     with:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
