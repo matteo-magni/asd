@@ -67,3 +67,16 @@ jobs:
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
       run-test: true
+
+  carvel-publish:
+    needs:
+      - bump-version
+      - filter-packages
+    uses: ./.github/workflows/carvel-publish.yml
+    strategy:
+      matrix: ${{ fromJson(needs.filter-packages.outputs.carvel) }}
+    with:
+      package_name: ${{ matrix.name }}
+      package_provider: ${{ matrix.provider }}
+      package_version: ${{ needs.bump-version.outputs.version }}
+      run-test: true
