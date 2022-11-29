@@ -5,8 +5,15 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  workflow_dispatch:
+
   push:
+    paths:
+      - 'packages/*/*/*/**'
+
+  pull_request:
+    types: [opened, ready_for_review, reopened, synchronize]
+    branches:
+      - main
     paths:
       - 'packages/*/*/*/**'
 
@@ -35,7 +42,7 @@ jobs:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
-      run-test: false
+      run-test: ${{ github.event_name == 'pull_request' }}
 
   carvel-publish:
     if: needs.list-packages.outputs.carvel_publish == 'true'
@@ -49,4 +56,4 @@ jobs:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
-      run-test: false
+      run-test: ${{ github.event_name == 'pull_request' }}

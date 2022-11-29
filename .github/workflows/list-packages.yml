@@ -1,7 +1,6 @@
 name: Reusable workflow for listing changed packages
 
 on:
-
   workflow_call:
 
     inputs:

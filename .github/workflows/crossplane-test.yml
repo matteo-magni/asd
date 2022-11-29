@@ -1,6 +1,5 @@
 name: Reusable workflow for testing Crossplane packages
 
-
 on:
   workflow_call:
     inputs:

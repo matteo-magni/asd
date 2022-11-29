@@ -1,5 +1,4 @@
-name: Reusable workflow for testing Crossplane packages
-
+name: Reusable workflow for testing Carvel packages
 
 on:
   workflow_call:

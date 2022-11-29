@@ -1,7 +1,6 @@
 name: Reusable bump-version workflow
 
 on:
-
   workflow_call:
 
     outputs:
