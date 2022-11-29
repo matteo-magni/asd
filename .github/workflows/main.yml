@@ -4,10 +4,11 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'aws/crossplane/*/**'
-      - 'azure/crossplane/*/**'
-      - 'gcp/crossplane/*/**'
-      - 'multicloud/crossplane/*/**'
+      - 'packages/**'
+      # - 'aws/crossplane/*/**'
+      # - 'azure/crossplane/*/**'
+      # - 'gcp/crossplane/*/**'
+      # - 'multicloud/crossplane/*/**'
 
 jobs:
 
