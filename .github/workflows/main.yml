@@ -1,4 +1,4 @@
-name: Use ENV in runner
+name: Publish packages
 
 on:
   workflow_dispatch:
@@ -7,6 +7,9 @@ on:
       - 'packages/**'
 
 jobs:
+
+  bump-version:
+    uses: ./.github/workflows/bump-version.yml
 
   list-packages:
     uses: ./.github/workflows/list-packages.yml
@@ -29,9 +32,6 @@ jobs:
         env:
           PACKAGES: ${{ needs.list-packages.outputs.packages }}
 
-  bump-version:
-    uses: ./.github/workflows/bump-version.yml
-
   crossplane-publish:
     needs:
       - bump-version
@@ -43,7 +43,7 @@ jobs:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
-      run-test: true
+      run-test: false
 
   carvel-publish:
     needs:
@@ -56,4 +56,4 @@ jobs:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
-      run-test: true
+      run-test: false
