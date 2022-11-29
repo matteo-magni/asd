@@ -38,15 +38,31 @@ jobs:
     with:
       basedir: packages
 
-  publish:
+  filter-packages:
+    runs-on: ubuntu-latest
+    needs:
+      - list-packages
+    outputs:
+      crossplane: ${{ steps.filter.outputs.crossplane }}
+      carvel: ${{ steps.filter.outputs.carvel }}
+    steps:
+      - name: Filter packages
+        id: filter
+        run: |
+          echo crossplane=$(jq -c '.include|=map(select(.operator=="crossplane"))' <<< $PACKAGES) >> $GITHUB_OUTPUT
+          echo carvel=$(jq -c '.include|=map(select(.operator!="crossplane"))' <<< $PACKAGES) >> $GITHUB_OUTPUT
+        env:
+          PACKAGES: ${{ needs.list-packages.outputs.packages }}
+
+  crossplane-publish:
     needs:
       - bump-version
-      - list-packages
-    uses: ./.github/workflows/publish.yml
+      - filter-packages
+    uses: ./.github/workflows/crossplane-publish.yml
     strategy:
-      matrix: ${{ fromJson(needs.list-packages.outputs.packages) }}
+      matrix: ${{ fromJson(needs.filter-packages.outputs.crossplane) }}
     with:
-      package: ${{ matrix.name }}
-      provider: ${{ matrix.provider }}
-      version: ${{ needs.bump-version.outputs.version }}
+      package_name: ${{ matrix.name }}
+      package_provider: ${{ matrix.provider }}
+      package_version: ${{ needs.bump-version.outputs.version }}
       run-test: true
