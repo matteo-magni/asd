@@ -41,7 +41,7 @@ jobs:
             | unique
             | { "include": . }
           ')
-          echo "packages=${packages}" | tee $GITHUB_OUTPUT
+          echo "packages=${packages}" | tee -a $GITHUB_OUTPUT
         env:
           BASEDIR: ${{ inputs.basedir }}
           GIT_REF: ${{ inputs.ref }}

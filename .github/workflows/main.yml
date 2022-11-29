@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'packages/**'
+      - 'packages/*/*/*/**'
 
 jobs:
 
@@ -27,10 +27,10 @@ jobs:
         id: filter
         run: |
           crossplane=$(jq -c '.include|=map(select(.operator=="crossplane"))' <<< $PACKAGES)
-          echo "crossplane=${crossplane}" | tee $GITHUB_OUTPUT
+          echo "crossplane=${crossplane}" | tee -a $GITHUB_OUTPUT
           echo "crossplane_publish=$(jq '.include|length > 0' <<<${crossplane})" >> $GITHUB_OUTPUT
           carvel=$(jq -c '.include|=map(select(.operator!="crossplane"))' <<< $PACKAGES)
-          echo "carvel=${carvel}" | tee $GITHUB_OUTPUT
+          echo "carvel=${carvel}" | tee -a $GITHUB_OUTPUT
           echo "carvel_publish=$(jq '.include|length > 0' <<<${carvel})" >> $GITHUB_OUTPUT
         env:
           PACKAGES: ${{ needs.list-packages.outputs.packages }}
