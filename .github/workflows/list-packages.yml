@@ -1,0 +1,38 @@
+name: Reusable workflow for listing changed packages
+
+on:
+
+  workflow_call:
+
+    inputs:
+      basedir:
+        type: string
+        description: Packages base directory path
+        default: ""
+      ref:
+        type: string
+        description: Git reference to compare HEAD with
+        default: HEAD~1
+    outputs:
+      packages:
+        value: ${{ jobs.list-packages.outputs.packages }}
+
+jobs:
+  list-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+
+      - name: List packages that have changed
+        id: list
+        run: |
+          packages=$(git diff-tree --name-only -r --diff-filter=ACM ${GIT_REF} HEAD | jq -ncrR --arg BASEDIR ${BASEDIR%%/} '[inputs]|map(capture("^"+$BASEDIR+"/(?<p>.*)$").p|split("/")|{"provider":.[0],"operator":.[1],"name":.[2]})|unique|{"include":.}')
+          echo "packages=${packages}" | tee $GITHUB_OUTPUT
+        env:
+          BASEDIR: ${{ inputs.basedir }}
+          GIT_REF: ${{ inputs.ref }}
