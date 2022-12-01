@@ -27,6 +27,13 @@ on:
       package_registry:
         value: ${{ jobs.publish.outputs.package_registry }}
 
+env:
+  PACKAGE_VERSION: ${{ inputs.package_version }}
+  PACKAGE_REGISTRY: ghcr.io
+  PACKAGE_REPOSITORY: ${{ github.repository }}/${{ inputs.package_provider }}/crossplane/${{ inputs.package_name }}
+  PACKAGE_PROVIDER: ${{ inputs.package_provider }}
+  PACKAGE_NAME: ${{ inputs.package_name }}
+
 jobs:
 
   publish:
@@ -35,13 +42,6 @@ jobs:
     outputs:
       package_repository: ${{ env.PACKAGE_REPOSITORY }}
       package_registry: ${{ env.PACKAGE_REGISTRY }}
-
-    env:
-      PACKAGE_VERSION: ${{ inputs.package_version }}
-      PACKAGE_REGISTRY: ghcr.io
-      PACKAGE_REPOSITORY: ${{ github.repository }}/${{ inputs.package_provider }}/crossplane/${{ inputs.package_name }}
-      PACKAGE_PROVIDER: ${{ inputs.package_provider }}
-      PACKAGE_NAME: ${{ inputs.package_name }}
 
     steps:
 
