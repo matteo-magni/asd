@@ -4,6 +4,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PACKAGES_BASEDIR: packages
+
 on:
 
   push:
@@ -21,10 +24,25 @@ on:
 
 jobs:
 
+  parameters:
+    runs-on: ubuntu-latest
+
+    outputs:
+      packages_basedir: ${{ steps.params.outputs.packages_basedir}}
+
+    steps:
+
+      - name: Set parameters
+        id: params
+        run: |
+          echo "packages_basedir=${PACKAGES_BASEDIR}" >> $GITHUB_OUTPUT
+
   list-packages:
+    needs:
+      - parameters
     uses: ./.github/workflows/list-packages.yml
     with:
-      basedir: packages
+      basedir: ${{ needs.parameters.outputs.packages_basedir }}
 
   bump-version:
     if: needs.list-packages.outputs.crossplane_publish == 'true' || needs.list-packages.outputs.carvel_publish == 'true'
