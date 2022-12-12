@@ -43,6 +43,9 @@ jobs:
             - vpc-0123456789
           EOF
 
+          echo elasticache
+          echo vpc-0123456789
+
 
   # parameters:
   #   runs-on: ubuntu-latest
