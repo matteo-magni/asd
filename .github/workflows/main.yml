@@ -35,17 +35,19 @@ jobs:
 
       - name: Print secret substring
         run: |
-          cat <<EOF
-          name: elasticache
-          namespace: default
-          cacheSubnetGroupName: default
-          vpcSecurityGroupIDs:
-            - vpc-0123456789
-          EOF
-
           echo elasticache
           echo vpc-0123456789
 
+      - name: Set up dynamic masks
+        run: |
+          cat <<EOF | jq -r '.[]' | while read L; do echo "::add-mask::$L"; done
+          ${{ secrets.CONFIG }}
+          EOF
+
+      - name: Print secret substring
+        run: |
+          echo elasticache
+          echo vpc-0123456789
 
   # parameters:
   #   runs-on: ubuntu-latest
