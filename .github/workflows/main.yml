@@ -37,10 +37,33 @@ jobs:
         run: |
           echo elasticache
           echo vpc-0123456789
-
-      - name: Set up dynamic masks
+      
+      - name: Identify format
         run: |
-          cat <<EOF | jq -r '.[]' | while read L; do echo "::add-mask::$L"; done
+          JSON=1
+          cat <<EOF | jq > /dev/null || JSON=0
+          ${{ secrets.CONFIG }}
+          EOF
+
+          YAML=1
+          cat <<EOF | yq > /dev/null || YAML=0
+          ${{ secrets.CONFIG }}
+          EOF
+
+          echo JSON=$JSON >> $GITHUB_ENV
+          echo YAML=$YAML >> $GITHUB_ENV
+
+      - name: Set up dynamic masks - JSON
+        if: env.JSON == 1
+        run: |
+          cat <<EOF | jq -r '..|select(type == "string")' | while read L; do echo "::add-mask::$L"; done
+          ${{ secrets.CONFIG }}
+          EOF
+
+      - name: Set up dynamic masks - YAML
+        if: env.YAML == 1
+        run: |
+          cat <<EOF | yq -o=json | jq '..|select(type == "string")' | while read L; do echo "::add-mask::$L"; done
           ${{ secrets.CONFIG }}
           EOF
 
