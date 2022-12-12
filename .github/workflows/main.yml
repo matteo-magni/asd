@@ -13,68 +13,87 @@ on:
     branches:
       - main
       - develop
-    paths:
-      - 'packages/*/*/*/**'
+  #   paths:
+  #     - 'packages/*/*/*/**'
 
-  pull_request:
-    types: [opened, ready_for_review, reopened, synchronize]
-    branches:
-      - main
-    paths:
-      - 'packages/*/*/*/**'
+  # pull_request:
+  #   types: [opened, ready_for_review, reopened, synchronize]
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'packages/*/*/*/**'
 
 jobs:
 
-  parameters:
+  dump:
     runs-on: ubuntu-latest
 
-    outputs:
-      packages_basedir: ${{ steps.params.outputs.packages_basedir}}
-
     steps:
-
-      - name: Set parameters
-        id: params
+      - name: Print secret
         run: |
-          echo "packages_basedir=${PACKAGES_BASEDIR}" >> $GITHUB_OUTPUT
+          secret: ${{ secrets.CONFIG }}
 
-  list-packages:
-    needs:
-      - parameters
-    uses: ./.github/workflows/list-packages.yml
-    with:
-      basedir: ${{ needs.parameters.outputs.packages_basedir }}
+      - name: Print secret substring
+        run: |
+          cat <<EOF
+          name: elasticache
+          namespace: default
+          cacheSubnetGroupName: default
+          vpcSecurityGroupIDs:
+            - vpc-0123456789
+          EOF
 
-  bump-version:
-    if: needs.list-packages.outputs.crossplane_publish == 'true' || needs.list-packages.outputs.carvel_publish == 'true'
-    uses: ./.github/workflows/bump-version.yml
-    needs:
-      - list-packages
 
-  crossplane-publish:
-    if: needs.list-packages.outputs.crossplane_publish == 'true'
-    needs:
-      - bump-version
-      - list-packages
-    uses: ./.github/workflows/crossplane-publish.yml
-    strategy:
-      matrix: ${{ fromJson(needs.list-packages.outputs.crossplane) }}
-    with:
-      package_name: ${{ matrix.name }}
-      package_provider: ${{ matrix.provider }}
-      package_version: ${{ needs.bump-version.outputs.version }}
-      run-test: ${{ github.event_name == 'pull_request' }}
+  # parameters:
+  #   runs-on: ubuntu-latest
 
-  carvel-publish:
-    if: needs.list-packages.outputs.carvel_publish == 'true'
-    needs:
-      - bump-version
-      - list-packages
-    uses: ./.github/workflows/carvel-publish.yml
-    strategy:
-      matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
-    with:
-      package_name: ${{ matrix.name }}
-      package_provider: ${{ matrix.provider }}
-      package_version: ${{ needs.bump-version.outputs.version }}
-      run-test: ${{ github.event_name == 'pull_request' }}
+  #   outputs:
+  #     packages_basedir: ${{ steps.params.outputs.packages_basedir}}
+
+  #   steps:
+
+  #     - name: Set parameters
+  #       id: params
+  #       run: |
+  #         echo "packages_basedir=${PACKAGES_BASEDIR}" >> $GITHUB_OUTPUT
+
+  # list-packages:
+  #   needs:
+  #     - parameters
+  #   uses: ./.github/workflows/list-packages.yml
+  #   with:
+  #     basedir: ${{ needs.parameters.outputs.packages_basedir }}
+
+  # bump-version:
+  #   if: needs.list-packages.outputs.crossplane_publish == 'true' || needs.list-packages.outputs.carvel_publish == 'true'
+  #   uses: ./.github/workflows/bump-version.yml
+  #   needs:
+  #     - list-packages
+
+  # crossplane-publish:
+  #   if: needs.list-packages.outputs.crossplane_publish == 'true'
+  #   needs:
+  #     - bump-version
+  #     - list-packages
+  #   uses: ./.github/workflows/crossplane-publish.yml
+  #   strategy:
+  #     matrix: ${{ fromJson(needs.list-packages.outputs.crossplane) }}
+  #   with:
+  #     package_name: ${{ matrix.name }}
+  #     package_provider: ${{ matrix.provider }}
+  #     package_version: ${{ needs.bump-version.outputs.version }}
+  #     run-test: ${{ github.event_name == 'pull_request' }}
+
+  # carvel-publish:
+  #   if: needs.list-packages.outputs.carvel_publish == 'true'
+  #   needs:
+  #     - bump-version
+  #     - list-packages
+  #   uses: ./.github/workflows/carvel-publish.yml
+  #   strategy:
+  #     matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
+  #   with:
+  #     package_name: ${{ matrix.name }}
+  #     package_provider: ${{ matrix.provider }}
+  #     package_version: ${{ needs.bump-version.outputs.version }}
+  #     run-test: ${{ github.event_name == 'pull_request' }}
