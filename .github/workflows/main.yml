@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Print secret
         run: |
-          secret: ${{ secrets.CONFIG }}
+          echo secret: ${{ secrets.CONFIG }}
 
       - name: Print secret substring
         run: |
