@@ -37,35 +37,40 @@ jobs:
         run: |
           echo elasticache
           echo vpc-0123456789
+
+      - name: Invoke mask action
+        uses: matteo-magni/secret-mask-action@develop
+        with:
+          secret: ${{ secrets.CONFIG }}
       
-      - name: Identify format
-        run: |
-          JSON=1
-          cat <<EOF | jq > /dev/null || JSON=0
-          ${{ secrets.CONFIG }}
-          EOF
+      # - name: Identify format
+      #   run: |
+      #     JSON=1
+      #     cat <<EOF | jq > /dev/null || JSON=0
+      #     ${{ secrets.CONFIG }}
+      #     EOF
 
-          YAML=1
-          cat <<EOF | yq > /dev/null || YAML=0
-          ${{ secrets.CONFIG }}
-          EOF
+      #     YAML=1
+      #     cat <<EOF | yq > /dev/null || YAML=0
+      #     ${{ secrets.CONFIG }}
+      #     EOF
 
-          echo JSON=$JSON >> $GITHUB_ENV
-          echo YAML=$YAML >> $GITHUB_ENV
+      #     echo JSON=$JSON >> $GITHUB_ENV
+      #     echo YAML=$YAML >> $GITHUB_ENV
 
-      - name: Set up dynamic masks - JSON
-        if: env.JSON == 1
-        run: |
-          cat <<EOF | jq -r '..|select(type == "string")' | while read L; do echo "::add-mask::$L"; done
-          ${{ secrets.CONFIG }}
-          EOF
+      # - name: Set up dynamic masks - JSON
+      #   if: env.JSON == 1
+      #   run: |
+      #     cat <<EOF | jq -r '..|select(type == "string")' | while read L; do echo "::add-mask::$L"; done
+      #     ${{ secrets.CONFIG }}
+      #     EOF
 
-      - name: Set up dynamic masks - YAML
-        if: env.YAML == 1
-        run: |
-          cat <<EOF | yq -o=json | jq '..|select(type == "string")' | while read L; do echo "::add-mask::$L"; done
-          ${{ secrets.CONFIG }}
-          EOF
+      # - name: Set up dynamic masks - YAML
+      #   if: env.YAML == 1
+      #   run: |
+      #     cat <<EOF | yq -o=json | jq '..|select(type == "string")' | while read L; do echo "::add-mask::$L"; done
+      #     ${{ secrets.CONFIG }}
+      #     EOF
 
       - name: Print secret substring
         run: |
