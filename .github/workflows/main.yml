@@ -39,7 +39,7 @@ jobs:
           echo vpc-0123456789
 
       - name: Invoke mask action
-        uses: matteo-magni/secret-mask-action@develop
+        uses: matteo-magni/secret-mask-action@main
         with:
           secret: ${{ secrets.CONFIG }}
       
