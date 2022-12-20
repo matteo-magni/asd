@@ -1,79 +1,67 @@
-name: Publish packages
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  PACKAGES_BASEDIR: packages
+name: Main wf
 
 on:
-
   push:
     branches:
       - main
-    paths:
-      - 'packages/*/*/*/**'
 
-  pull_request:
-    types: [opened, ready_for_review, reopened, synchronize]
-    branches:
-      - main
-    paths:
-      - 'packages/*/*/*/**'
+env:
+  SECRET: ${{ secrets.FAKE_SECRET_YAML}}
 
 jobs:
 
-  parameters:
+  unmasked:
     runs-on: ubuntu-latest
+    steps:
+      - name: Set individual env variables
+        run: |
+          for k in $(yq -o=json <<<"$SECRET" | jq -r 'keys[]'); do
+            K=$(echo $k | sed -r 's/([a-z0-9])([A-Z])/\1_\L\2/g' | tr '[:lower:]' '[:upper:]')
+            echo $K=$(yq -o=json <<<"$SECRET" | jq -r '."'$k'"') >> $GITHUB_ENV
+          done
+      - name: Print secret
+        run: |
+          echo "$SECRET"
+      - name: Print key
+        run: |
+          yq '."a-key"' <<<"$SECRET"
+      - name: Print key
+        run: |
+          yq '."another-key"' <<<"$SECRET"
+      - name: Print b64 key
+        run: |
+          yq '."a-key"' <<<"$SECRET" | base64
+      - name: Print b64 key
+        run: |
+          yq '."another-key"' <<<"$SECRET" | base64
 
-    outputs:
-      packages_basedir: ${{ steps.params.outputs.packages_basedir}}
-
+  masked:
+    runs-on: ubuntu-latest
     steps:
 
-      - name: Set parameters
-        id: params
+      - name: Mask secret
+        uses: matteo-magni/secret-mask-action@main
+        with:
+          secret: ${{ env.SECRET }}
+
+      - name: Set individual env variables
         run: |
-          echo "packages_basedir=${PACKAGES_BASEDIR}" >> $GITHUB_OUTPUT
-
-  list-packages:
-    needs:
-      - parameters
-    uses: ./.github/workflows/list-packages.yml
-    with:
-      basedir: ${{ needs.parameters.outputs.packages_basedir }}
-
-  bump-version:
-    if: needs.list-packages.outputs.crossplane_publish == 'true' || needs.list-packages.outputs.carvel_publish == 'true'
-    uses: ./.github/workflows/bump-version.yml
-    needs:
-      - list-packages
-
-  crossplane-publish:
-    if: needs.list-packages.outputs.crossplane_publish == 'true'
-    needs:
-      - bump-version
-      - list-packages
-    uses: ./.github/workflows/crossplane-publish.yml
-    strategy:
-      matrix: ${{ fromJson(needs.list-packages.outputs.crossplane) }}
-    with:
-      package_name: ${{ matrix.name }}
-      package_provider: ${{ matrix.provider }}
-      package_version: ${{ needs.bump-version.outputs.version }}
-      run-test: ${{ github.event_name == 'pull_request' }}
-
-  carvel-publish:
-    if: needs.list-packages.outputs.carvel_publish == 'true'
-    needs:
-      - bump-version
-      - list-packages
-    uses: ./.github/workflows/carvel-publish.yml
-    strategy:
-      matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
-    with:
-      package_name: ${{ matrix.name }}
-      package_provider: ${{ matrix.provider }}
-      package_version: ${{ needs.bump-version.outputs.version }}
-      run-test: ${{ github.event_name == 'pull_request' }}
+          for k in $(yq -o=json <<<"$SECRET" | jq -r 'keys[]'); do
+            K=$(echo $k | sed -r 's/([a-z0-9])([A-Z])/\1_\L\2/g' | tr '[:lower:]' '[:upper:]')
+            echo $K=$(yq -o=json <<<"$SECRET" | jq -r '."'$k'"') >> $GITHUB_ENV
+          done
+      - name: Print secret
+        run: |
+          echo "$SECRET"
+      - name: Print key
+        run: |
+          yq '."a-key"' <<<"$SECRET"
+      - name: Print key
+        run: |
+          yq '."another-key"' <<<"$SECRET"
+      - name: Print b64 key
+        run: |
+          yq '."a-key"' <<<"$SECRET" | base64
+      - name: Print b64 key
+        run: |
+          yq '."another-key"' <<<"$SECRET" | base64

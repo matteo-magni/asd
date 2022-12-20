@@ -1,0 +1,53 @@
+name: After main wf
+
+on:
+  workflow_run:
+    workflows:
+      - Main wf
+    types:
+      - completed
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      TEST_STRINGS: |
+        [
+          "a-value",
+          "thisisareallysecretstring"
+        ]
+
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Get logs
+        run: |
+          ZIP=$(mktemp)
+          gh api -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/logs > $ZIP
+          unzip ${ZIP}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Search job '${{ env.JOB_NAME }}'
+        run: |
+          jq -r '.[]' <<<"$TEST_STRINGS" | while read SECRET; do
+            grep -R "${SECRET}" "${JOB_NAME}" || { echo "WARNING - String not found" && exit 2 ; }
+            grep -R $(base64 <<<"${SECRET}") "${JOB_NAME}" || { echo "WARNING - String not found" && exit 2 ; }
+          done
+        env:
+          JOB_NAME: unmasked
+
+      - name: Search job '${{ env.JOB_NAME }}'
+        run: |
+          jq -r '.[]' <<<"$TEST_STRINGS" | while read SECRET; do
+            grep -R "${SECRET}" "${JOB_NAME}" && { echo "ERROR - String found" && exit 1 ; }
+            grep -R $(base64 <<<"${SECRET}") "${JOB_NAME}" && { echo "ERROR - String found" && exit 1 ; }
+          done
+        env:
+          JOB_NAME: masked
