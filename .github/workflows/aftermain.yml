@@ -28,3 +28,4 @@ jobs:
         env:
           SCRIPT: ./scripts/search-logs.sh
           RUN_ID: ${{ github.event.workflow_run.id }}
+          GH_TOKEN: ${{ github.token }}
