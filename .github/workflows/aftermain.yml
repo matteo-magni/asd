@@ -7,10 +7,13 @@ on:
     types:
       - completed
 
+env:
+  BRANCH: ${{ github.event.workflow_run.head_branch }}
+
 jobs:
 
   search-logs:
-    uses: .github/workflows/search-logs.yml@${{ github.event.workflow_run.head_branch }}
+    uses: .github/workflows/search-logs.yml@${{ env.BRANCH }}
     with:
       run_id: ${{ github.event.workflow_run.id }}
 
