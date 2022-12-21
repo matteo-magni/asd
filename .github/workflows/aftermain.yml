@@ -36,18 +36,20 @@ jobs:
 
       - name: Search job '${{ env.JOB_NAME }}'
         run: |
-          jq -r '.[]' <<<"$TEST_STRINGS" | while read SECRET; do
-            grep -R "${SECRET}" "${JOB_NAME}" || { echo "WARNING - String not found" && exit 2 ; }
-            grep -R $(base64 <<<"${SECRET}") "${JOB_NAME}" || { echo "WARNING - String not found" && exit 2 ; }
+          jq -r '.[]' <<<"$TEST_STRINGS" | while read PLAINTEXT; do
+            B64ENCODED=$(base64 <<<"${PLAINTEXT}")
+            grep -R "${PLAINTEXT}" "${JOB_NAME}" || { echo "WARNING - String '${PLAINTEXT}' not found" ; exit 112 ; } || true
+            grep -R "${B64ENCODED}" "${JOB_NAME}" || { echo "WARNING - String '${B64ENCODED}' not found" ; exit 112 ; } || true
           done
         env:
           JOB_NAME: unmasked
 
       - name: Search job '${{ env.JOB_NAME }}'
         run: |
-          jq -r '.[]' <<<"$TEST_STRINGS" | while read SECRET; do
-            grep -R "${SECRET}" "${JOB_NAME}" && { echo "ERROR - String found" && exit 1 ; }
-            grep -R $(base64 <<<"${SECRET}") "${JOB_NAME}" && { echo "ERROR - String found" && exit 1 ; }
+          jq -r '.[]' <<<"$TEST_STRINGS" | while read PLAINTEXT; do
+            B64ENCODED=$(base64 <<<"${PLAINTEXT}")
+            grep -R "${PLAINTEXT}" "${JOB_NAME}" && { echo "ERROR - String '${PLAINTEXT}' found" ; exit 111 ; } || true
+            grep -R "${B64ENCODED}" "${JOB_NAME}" && { echo "ERROR - String '${B64ENCODED}' found" ; exit 111 ; } || true
           done
         env:
           JOB_NAME: masked

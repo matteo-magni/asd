@@ -40,7 +40,7 @@ jobs:
     steps:
 
       - name: Mask secret
-        uses: matteo-magni/secret-mask-action@main
+        uses: matteo-magni/secret-mask-action@develop
         with:
           secret: ${{ env.SECRET }}
 
