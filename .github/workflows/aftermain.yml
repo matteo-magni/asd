@@ -9,47 +9,52 @@ on:
 
 jobs:
 
-  test:
-    runs-on: ubuntu-latest
+  search-logs:
+    uses: .github/workflows/search-logs.yml@${{ github.event.workflow_run.head_branch }}
+    with:
+      run_id: ${{ github.event.workflow_run.id }}
 
-    env:
-      TEST_STRINGS: |
-        [
-          "a-value",
-          "thisisareallysecretstring"
-        ]
+  # test:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+  #   env:
+  #     TEST_STRINGS: |
+  #       [
+  #         "a-value",
+  #         "thisisareallysecretstring"
+  #       ]
 
-      - name: Get logs
-        run: |
-          ZIP=$(mktemp)
-          gh api -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/logs > $ZIP
-          unzip ${ZIP}
-        env:
-          GH_TOKEN: ${{ github.token }}
+  #   steps:
+  #     - name: Dump GitHub context
+  #       env:
+  #         GITHUB_CONTEXT: ${{ toJson(github) }}
+  #       run: echo "$GITHUB_CONTEXT"
 
-      - name: Search job '${{ env.JOB_NAME }}'
-        run: |
-          jq -r '.[]' <<<"$TEST_STRINGS" | while read PLAINTEXT; do
-            B64ENCODED=$(base64 <<<"${PLAINTEXT}")
-            grep -R "${PLAINTEXT}" "${JOB_NAME}" || { echo "WARNING - String '${PLAINTEXT}' not found" ; exit 112 ; } || true
-            grep -R "${B64ENCODED}" "${JOB_NAME}" || { echo "WARNING - String '${B64ENCODED}' not found" ; exit 112 ; } || true
-          done
-        env:
-          JOB_NAME: unmasked
+  #     - name: Get logs
+  #       run: |
+  #         ZIP=$(mktemp)
+  #         gh api -H "Accept: application/vnd.github+json" \
+  #           /repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/logs > $ZIP
+  #         unzip ${ZIP}
+  #       env:
+  #         GH_TOKEN: ${{ github.token }}
 
-      - name: Search job '${{ env.JOB_NAME }}'
-        run: |
-          jq -r '.[]' <<<"$TEST_STRINGS" | while read PLAINTEXT; do
-            B64ENCODED=$(base64 <<<"${PLAINTEXT}")
-            grep -R "${PLAINTEXT}" "${JOB_NAME}" && { echo "ERROR - String '${PLAINTEXT}' found" ; exit 111 ; } || true
-            grep -R "${B64ENCODED}" "${JOB_NAME}" && { echo "ERROR - String '${B64ENCODED}' found" ; exit 111 ; } || true
-          done
-        env:
-          JOB_NAME: masked
+  #     - name: Search job '${{ env.JOB_NAME }}'
+  #       run: |
+  #         jq -r '.[]' <<<"$TEST_STRINGS" | while read PLAINTEXT; do
+  #           B64ENCODED=$(base64 <<<"${PLAINTEXT}")
+  #           grep -R "${PLAINTEXT}" "${JOB_NAME}" || { echo "WARNING - String '${PLAINTEXT}' not found" ; exit 112 ; } || true
+  #           grep -R "${B64ENCODED}" "${JOB_NAME}" || { echo "WARNING - String '${B64ENCODED}' not found" ; exit 112 ; } || true
+  #         done
+  #       env:
+  #         JOB_NAME: unmasked
+
+  #     - name: Search job '${{ env.JOB_NAME }}'
+  #       run: |
+  #         jq -r '.[]' <<<"$TEST_STRINGS" | while read PLAINTEXT; do
+  #           B64ENCODED=$(base64 <<<"${PLAINTEXT}")
+  #           grep -R "${PLAINTEXT}" "${JOB_NAME}" && { echo "ERROR - String '${PLAINTEXT}' found" ; exit 111 ; } || true
+  #           grep -R "${B64ENCODED}" "${JOB_NAME}" && { echo "ERROR - String '${B64ENCODED}' found" ; exit 111 ; } || true
+  #         done
+  #       env:
+  #         JOB_NAME: masked
