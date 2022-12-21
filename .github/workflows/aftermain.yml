@@ -1,4 +1,4 @@
-name: After wf '${{ github.event.workflow_run.head_sha }}'
+name: After wf
 
 on:
   workflow_run:
