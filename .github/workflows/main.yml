@@ -6,6 +6,7 @@ on:
       - main
     paths-ignore:
     - .github/**
+  pull_request:
 
 env:
   SECRET: ${{ secrets.FAKE_SECRET_YAML}}
