@@ -7,57 +7,24 @@ on:
     types:
       - completed
 
-env:
-  BRANCH: ${{ github.event.workflow_run.head_branch }}
-
 jobs:
 
   search-logs:
-    uses: .github/workflows/search-logs.yml@${{ env.BRANCH }}
-    with:
-      run_id: ${{ github.event.workflow_run.id }}
 
-  # test:
-  #   runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-  #   env:
-  #     TEST_STRINGS: |
-  #       [
-  #         "a-value",
-  #         "thisisareallysecretstring"
-  #       ]
+    steps:
 
-  #   steps:
-  #     - name: Dump GitHub context
-  #       env:
-  #         GITHUB_CONTEXT: ${{ toJson(github) }}
-  #       run: echo "$GITHUB_CONTEXT"
-
-  #     - name: Get logs
-  #       run: |
-  #         ZIP=$(mktemp)
-  #         gh api -H "Accept: application/vnd.github+json" \
-  #           /repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/logs > $ZIP
-  #         unzip ${ZIP}
-  #       env:
-  #         GH_TOKEN: ${{ github.token }}
-
-  #     - name: Search job '${{ env.JOB_NAME }}'
-  #       run: |
-  #         jq -r '.[]' <<<"$TEST_STRINGS" | while read PLAINTEXT; do
-  #           B64ENCODED=$(base64 <<<"${PLAINTEXT}")
-  #           grep -R "${PLAINTEXT}" "${JOB_NAME}" || { echo "WARNING - String '${PLAINTEXT}' not found" ; exit 112 ; } || true
-  #           grep -R "${B64ENCODED}" "${JOB_NAME}" || { echo "WARNING - String '${B64ENCODED}' not found" ; exit 112 ; } || true
-  #         done
-  #       env:
-  #         JOB_NAME: unmasked
-
-  #     - name: Search job '${{ env.JOB_NAME }}'
-  #       run: |
-  #         jq -r '.[]' <<<"$TEST_STRINGS" | while read PLAINTEXT; do
-  #           B64ENCODED=$(base64 <<<"${PLAINTEXT}")
-  #           grep -R "${PLAINTEXT}" "${JOB_NAME}" && { echo "ERROR - String '${PLAINTEXT}' found" ; exit 111 ; } || true
-  #           grep -R "${B64ENCODED}" "${JOB_NAME}" && { echo "ERROR - String '${B64ENCODED}' found" ; exit 111 ; } || true
-  #         done
-  #       env:
-  #         JOB_NAME: masked
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_commit.id }}
+      
+      - name: Find and run ${{ env.SCRIPT }}
+        run: |
+          if [ -x "$SCRIPT" ]; then
+            ${SCRIPT}
+          fi
+        env:
+          SCRIPT: ./scripts/search-logs.sh
+          RUN_ID: ${{ github.event.workflow_run.id }}
