@@ -12,6 +12,8 @@ INPUTS='
 '
 
 REPOSITORY=${REPOSITORY:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}
+echo "I want to fail"
+exit 1
 
 pushd ${WD}
 
